@@ -24,6 +24,7 @@ import os
 import os.path
 import subprocess
 import sys
+import time
 
 def RunCommand(cmd):
   """ Echo and run the given command
@@ -63,6 +64,14 @@ def BuildImage(in_dir, prop_dict, out_file):
       build_command.append(prop_dict["partition_size"])
     if "selinux_fc" in prop_dict:
       build_command.append(prop_dict["selinux_fc"])
+  if fs_type.startswith("ubifs"):
+    # add ubifs image generate support.
+    build_command = ["mkfs.ubifs", "-d"]
+    build_command.append(in_dir)
+    build_command.append("-o")
+    build_command.append(out_file)
+    if prop_dict.get("mkfsubifs_flags", None):
+      build_command.extend(prop_dict["mkfsubifs_flags"].split())
   else:
     build_command = ["mkyaffs2image", "-f"]
     if prop_dict.get("mkyaffs2_extra_flags", None):
@@ -114,6 +123,7 @@ def ImagePropFromGlobalDict(glob_dict, mount_point):
       "mkyaffs2_extra_flags",
       "selinux_fc",
       "skip_fsck",
+      "mkfsubifs_flags",
       )
   for p in common_props:
     copy_prop(p, p)
