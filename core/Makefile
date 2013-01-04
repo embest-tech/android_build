@@ -547,6 +547,11 @@ else
 ifeq ($(TARGET_USERIMAGES_USE_EXT4),true)
 INTERNAL_USERIMAGES_USE_EXT := true
 INTERNAL_USERIMAGES_EXT_VARIANT := ext4
+else
+ifeq ($(TARGET_USERIMAGES_USE_UBIFS),true)
+# FIXME: this borrow ext's var to generate it.
+INTERNAL_USERIMAGES_EXT_VARIANT := ubifs
+endif
 endif
 endif
 endif
@@ -558,7 +563,11 @@ endif
 ifeq ($(INTERNAL_USERIMAGES_USE_EXT),true)
 INTERNAL_USERIMAGES_DEPS := $(MKEXTUSERIMG) $(MAKE_EXT4FS) $(SIMG2IMG) $(E2FSCK)
 else
+ifeq ($(TARGET_USERIMAGES_USE_UBIFS),true)
+INTERNAL_USERIMAGES_DEPS := $(MKUBIFS)
+else
 INTERNAL_USERIMAGES_DEPS := $(MKYAFFS2)
+endif
 endif
 INTERNAL_USERIMAGES_BINARY_PATHS := $(sort $(dir $(INTERNAL_USERIMAGES_DEPS)))
 
@@ -571,6 +580,7 @@ $(if $(BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE),$(hide) echo "cache_fs_type=$(BOARD_CA
 $(if $(BOARD_CACHEIMAGE_PARTITION_SIZE),$(hide) echo "cache_size=$(BOARD_CACHEIMAGE_PARTITION_SIZE)" >> $(1))
 $(if $(INTERNAL_USERIMAGES_SPARSE_EXT_FLAG),$(hide) echo "extfs_sparse_flag=$(INTERNAL_USERIMAGES_SPARSE_EXT_FLAG)" >> $(1))
 $(if $(mkyaffs2_extra_flags),$(hide) echo "mkyaffs2_extra_flags=$(mkyaffs2_extra_flags)" >> $(1))
+$(if $(TARGET_MKUBIFS_ARGS),$(hide) echo "mkfsubifs_flags=$(TARGET_MKUBIFS_ARGS)" >> $(1))
 $(if $(filter true, $(strip $(HAVE_SELINUX))), echo "selinux_fc=$(TARGET_ROOT_OUT)/file_contexts" >> $(1))
 endef
 
@@ -714,6 +724,8 @@ HOST_PROCESSOR := $(shell cat /proc/cpuinfo | grep processor | wc -l)
 INSTALLED_KERNEL_TARGET := $(PRODUCT_OUT)/kernel
 TARGET_PREBUILT_KERNEL := $(PRODUCT_OUT)/kernel
 KERNEL_CONFIGURE := kernel_imx/.config
+KERNEL_ZIMAGE    := kernel_imx/arch/arm/boot/zImage
+KERNEL_UIMAGE    := kernel_imx/arch/arm/boot/uImage
 KERNEL_OUT := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ
 KERNEL_HEADERS_INSTALL := $(KERNEL_OUT)/usr
 
@@ -729,11 +741,28 @@ $(KERNEL_HEADERS_INSTALL): $(KERNEL_CONFIGURE)
 
 $(TARGET_PREBUILT_KERNEL): $(KERNEL_CONFIGURE)
 	$(MAKE) -C kernel_imx -j$(HOST_PROCESSOR) uImage $(KERNEL_ENV)
-	install -D kernel_imx/arch/arm/boot/uImage $(PRODUCT_OUT)/uImage
-	install -D kernel_imx/arch/arm/boot/zImage $(PRODUCT_OUT)/kernel
+	install -D $(KERNEL_UIMAGE)  $(PRODUCT_OUT)/uImage
+	install -D $(KERNEL_ZIMAGE)  $(PRODUCT_OUT)/kernel
 
 else
 kernelimage:
+endif
+
+# ----------------------------------------------------------------
+# support ubifs rules:
+.PHONY: ubiimagesgenerate
+ifeq ($(TARGET_USERIMAGES_USE_UBIFS),true)
+UBI_RAW_IMAGE := $(PRODUCT_OUT)/android_root.img
+
+.PHONY: $(UBI_RAW_IMAGE)
+
+ubiimagesgenerate: $(UBI_RAW_IMAGE)
+
+$(UBI_RAW_IMAGE) : $(INSTALLED_USERDATAIMAGE_TARGET) systemimage
+	$(call pretty,"Generating UBI raw image:" "$(UBI_RAW_IMAGE)" "$(UBI_RAW_RECO_IMAGE)")
+	$(MKUBIRAW) -o $(UBI_RAW_IMAGE) $(TARGET_UBIRAW_ARGS)
+else
+ubiimagesgenerate:
 endif
 
 .PHONY: recoveryimage
