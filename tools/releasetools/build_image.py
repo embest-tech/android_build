@@ -64,7 +64,7 @@ def BuildImage(in_dir, prop_dict, out_file):
       build_command.append(prop_dict["partition_size"])
     if "selinux_fc" in prop_dict:
       build_command.append(prop_dict["selinux_fc"])
-  if fs_type.startswith("ubifs"):
+  elif fs_type.startswith("ubifs"):
     # add ubifs image generate support.
     build_command = ["mkfs.ubifs", "-d"]
     build_command.append(in_dir)
