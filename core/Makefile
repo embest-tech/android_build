@@ -772,34 +772,6 @@ KERNEL_UIMAGE    := kernel_imx/arch/arm/boot/uImage
 KERNEL_OUT := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ
 KERNEL_HEADERS_INSTALL := $(KERNEL_OUT)/usr
 
-.PHONY: kernelmodules
-
-kernel_modules_src_list :=
-kernel_modules_dist_list :=
-
-$(foreach cf,$(TARGET_KERNEL_MODULES),							\
-$(eval _src := $(call word-colon,1,$(cf)))						\
-$(eval _dest := $(call word-colon,2,$(cf)))						\
-$(eval kernel_modules_src_list += $(_src))						\
-$(eval kernel_modules_dest_list += $(call append-path,$(PRODUCT_OUT),$(_dest))))
-
-ifneq ($(strip $(kernel_modules_src_list)),)
-
-# kernel modules only depends on kernel config. don't needs kernel have built.
-kernelmodules: $(KERNEL_CONFIGURE) | $(ACP)
-	$(MAKE) -C kernel_imx modules $(KERNEL_ENV)
-	$(hide) $(foreach cf, $(TARGET_KERNEL_MODULES),				\
-	$(eval _src := $(call word-colon,1,$(cf)))				\
-	$(eval _dest := $(call word-colon,2,$(cf)))				\
-	$(eval _full_dest := $(call append-path,$(PRODUCT_OUT),$(_dest)))	\
-	$(eval _dest_dir := $(call dir, $(_full_dest))) 			\
-	mkdir -p $(_dest_dir); 							\
-	$(ACP) $(_src) $(_full_dest);						\
-	)
-	@echo "install kernel modules: $(kernel_modules_src_list)"
-else
-kernelmodules:
-endif
 
 .PHONY: $(TARGET_PREBUILT_KERNEL)
 kernelimage: $(TARGET_PREBUILT_KERNEL)
@@ -820,6 +792,33 @@ else
 kernelimage:
 endif
 
+.PHONY: kernelmodules
+
+kernel_modules_src_list :=
+kernel_modules_dist_list :=
+
+$(foreach cf,$(TARGET_KERNEL_MODULES),							\
+$(eval _src := $(call word-colon,1,$(cf)))						\
+$(eval _dest := $(call word-colon,2,$(cf)))						\
+$(eval kernel_modules_src_list += $(_src))						\
+$(eval kernel_modules_dest_list += $(call append-path,$(PRODUCT_OUT),$(_dest))))
+
+ifneq ($(strip $(kernel_modules_src_list)),)
+
+kernelmodules: $(TARGET_PREBUILT_KERNEL) | $(ACP)
+	$(MAKE) -C kernel_imx modules $(KERNEL_ENV)
+	$(hide) $(foreach cf, $(TARGET_KERNEL_MODULES),				\
+	$(eval _src := $(call word-colon,1,$(cf)))				\
+	$(eval _dest := $(call word-colon,2,$(cf)))				\
+	$(eval _full_dest := $(call append-path,$(PRODUCT_OUT),$(_dest)))	\
+	$(eval _dest_dir := $(call dir, $(_full_dest))) 			\
+	mkdir -p $(_dest_dir); 							\
+	$(ACP) $(_src) $(_full_dest);						\
+	)
+	@echo "install kernel modules: $(kernel_modules_src_list)"
+else
+kernelmodules:
+endif
 # ----------------------------------------------------------------
 # support ubifs rules:
 .PHONY: ubiimagesgenerate
