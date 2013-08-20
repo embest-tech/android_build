@@ -636,7 +636,11 @@ recovery_resource_deps := $(shell find $(recovery_resources_common) \
   $(recovery_resources_private) -type f)
 
 ifeq ($(TARGET_USERIMAGES_USE_UBIFS),true)
+ifdef TARGET_RECOVERY_FSTAB
+recovery_fstab := $(TARGET_RECOVERY_FSTAB)
+else
 recovery_fstab := $(strip $(wildcard $(TARGET_DEVICE_DIR)/recovery_nand.fstab))
+endif
 else
 ifdef TARGET_RECOVERY_FSTAB
 recovery_fstab := $(TARGET_RECOVERY_FSTAB)
