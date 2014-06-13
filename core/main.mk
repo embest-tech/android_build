@@ -901,7 +901,9 @@ findbugs: $(INTERNAL_FINDBUGS_HTML_TARGET) $(INTERNAL_FINDBUGS_XML_TARGET)
 clean:
 	@rm -rf $(OUT_DIR)
 	@echo "Entire build directory removed."
-
+	$(MAKE) -C bootable/bootloader/uboot-imx/ ARCH=arm  distclean
+	$(MAKE) -C kernel_imx/ ARCH=arm  distclean
+		
 .PHONY: clobber
 clobber: clean
 
