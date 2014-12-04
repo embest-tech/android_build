@@ -27,6 +27,7 @@ PRODUCT_PACKAGES := \
     Camera2 \
     CertInstaller \
     Email \
+    Ethernet \
     Exchange2 \
     FusedLocation \
     Gallery2 \

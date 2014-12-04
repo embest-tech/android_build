@@ -21,6 +21,7 @@ PRODUCT_PACKAGES := \
 	Calculator \
 	DeskClock \
 	Email \
+	Ethernet \
 	Exchange2 \
 	FusedLocation \
 	Gallery \
