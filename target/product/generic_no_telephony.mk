@@ -27,6 +27,7 @@ PRODUCT_PACKAGES := \
     CertInstaller \
     DrmProvider \
     Email \
+	Ethernet \
     Exchange2 \
     FusedLocation \
     Gallery2 \
