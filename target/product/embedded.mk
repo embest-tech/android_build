@@ -60,6 +60,7 @@ PRODUCT_PACKAGES += \
     libutils \
     linker \
     logcat \
+	rtctest \
     logwrapper \
     reboot \
     service \
